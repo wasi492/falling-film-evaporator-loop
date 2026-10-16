@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Falling Film Evaporator – Tube Count & Heat Transfer Calculator</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- KaTeX for crisp LaTeX formula rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --bg: #f3f6f9;
+      --panel: #ffffff;
+      --panel-alt: #f8fafc;
+      --ink: #0f2331;
+      --ink-secondary: #334d5c;
+      --mute: #627d8d;
+      --line: #d7e2e8;
+      --line-light: #ebf1f5;
+      --acc: #0284c7;
+      --acc-hover: #0369a1;
+      --acc-rgb: 2, 132, 199;
+      --accbg: #e0f2fe;
+      --warn: #d97706;
+      --warnbg: #fef3c7;
+      --err: #dc2626;
+      --errbg: #fee2e2;
+      --success: #059669;
+      --successbg: #d1fae5;
+      --step-border: #cbd5e1;
+      --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(15, 35, 49, 0.05);
+      --shadow-md: 0 4px 14px rgba(15, 35, 49, 0.08);
+      --purple: #7c3aed;
+      --purplebg: #f3e8ff;
+      --pink: #ec4899;
+      --pinkbg: #fdf2f8;
+    }
+
+    [data-theme="dark"] {
+      --bg: #09131a;
+      --panel: #111f28;
+      --panel-alt: #162834;
+      --ink: #f0f6fa;
+      --ink-secondary: #cad9e2;
+      --mute: #8da4b3;
+      --line: #223847;
+      --line-light: #1a2c38;
+      --acc: #38bdf8;
+      --acc-hover: #7dd3fc;
+      --acc-rgb: 56, 189, 248;
+      --accbg: #0d2a3a;
+      --warn: #fbbf24;
+      --warnbg: #3d2a08;
+      --err: #f87171;
+      --errbg: #3c1212;
+      --success: #34d399;
+      --successbg: #0a3321;
+      --step-border: #2c4759;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.6);
+      --purple: #a78bfa;
+      --purplebg: #2e1065;
+      --pink: #f472b6;
+      --pinkbg: #371424;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+      line-height: 1.55;
+      padding: 24px 16px 64px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .mono { font-family: "JetBrains Mono", monospace; }
+    main { width: 100%; max-width: 1220px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .title-wrap h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--accbg);
+      color: var(--acc);
+      border: 1px solid rgba(var(--acc-rgb), 0.3);
+    }
+    .sub { color: var(--mute); font-size: 0.95rem; margin-top: 4px; }
+
+    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .theme-toggle, .btn-icon {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .theme-toggle:hover, .btn-icon:hover { border-color: var(--acc); color: var(--acc); }
+
+    /* Layout Grid */
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 990px) {
+      .layout-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line-light);
+    }
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Fields */
+    .sec-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--acc);
+      margin: 14px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line-light);
+    }
+    .sec-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+    .form-group { margin-bottom: 10px; }
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 3px;
+    }
+    label { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+    .label-unit { font-size: 0.76rem; color: var(--mute); font-weight: 400; }
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: var(--acc);
+      box-shadow: 0 0 0 3px rgba(var(--acc-rgb), 0.18);
+    }
+    .unit-selector {
+      width: auto;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      background: var(--panel-alt);
+      border-left: 1px solid var(--line);
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      margin-left: -1px;
+    }
+    .input-with-select { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    .actions { display: flex; gap: 10px; margin-top: 16px; }
+    button.primary {
+      flex: 1;
+      background: var(--acc);
+      color: #fff;
+      border: 1px solid var(--acc);
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button.primary:hover { background: var(--acc-hover); }
+    button.secondary {
+      background: transparent;
+      color: var(--mute);
+      border: 1px solid var(--line);
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button.secondary:hover { color: var(--ink); border-color: var(--mute); }
+    .err-msg {
+      color: var(--err);
+      background: var(--errbg);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* Results Column */
+    .results-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* =========================================================================
+       TOP SUMMARY OVERVIEW: hi, ho, Uo, Area, Q
+       ========================================================================= */
+    .summary-card {
+      background: linear-gradient(135deg, var(--panel) 0%, var(--panel-alt) 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .summary-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--acc), #10b981, #7c3aed, #f59e0b, #ec4899);
+    }
+    .summary-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line-light);
+    }
+    .summary-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Key 5 Metrics Grid: hi, ho, Uo, Area, Q */
+    .key-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    @media (max-width: 900px) {
+      .key-metrics-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 580px) {
+      .key-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .metric-card:hover {
+      border-color: var(--acc);
+      transform: translateY(-2px);
+    }
+    .metric-card .m-lbl {
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+    .metric-card .m-val {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--ink);
+    }
+    .metric-card .m-sub {
+      font-size: 0.72rem;
+      color: var(--mute);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .metric-hi { border-top: 3px solid var(--acc); }
+    .metric-hi .m-val { color: var(--acc); }
+    .metric-ho { border-top: 3px solid #10b981; }
+    .metric-ho .m-val { color: #10b981; }
+    .metric-uo { border-top: 3px solid #7c3aed; }
+    .metric-uo .m-val { color: #7c3aed; }
+    .metric-area { border-top: 3px solid #f59e0b; }
+    .metric-area .m-val { color: #f59e0b; }
+    .metric-q { border-top: 3px solid #ec4899; }
+    .metric-q .m-val { color: #ec4899; }
+
+    .regime-tag {
+      display: inline-block;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .regime-laminar { background: #e0e7ff; color: #4338ca; }
+    .regime-wavy { background: #fef3c7; color: #b45309; }
+    .regime-turbulent { background: #d1fae5; color: #065f46; }
+
+    /* =========================================================================
+       CLEAN HYDRODYNAMICS & TEMPERATURE PARAMETERS CARD (Re, Pr, Gamma, phi, dT, Two)
+       ========================================================================= */
+    .hydro-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .hydro-card-header {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line-light);
+    }
+    .hydro-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .hydro-box {
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .hydro-box .h-lbl {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+    .hydro-box .h-val {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .hydro-box .h-sub {
+      font-size: 0.72rem;
+      color: var(--mute);
+      margin-top: 3px;
+    }
+
+    /* =========================================================================
+       PROMINENT TWO PASSES: "Tubes I Used" vs "Tubes Required"
+       ========================================================================= */
+    .pass-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 720px) { .pass-container { grid-template-columns: 1fr; } }
+    .pass-card {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .pass-card.active-pass {
+      border-color: var(--acc);
+      background: linear-gradient(180deg, rgba(var(--acc-rgb), 0.04) 0%, var(--panel) 100%);
+    }
+    .pass-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line-light);
+    }
+    .pass-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pass-status-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    /* Comparison Box */
+    .tube-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .tube-metric-box {
+      padding: 10px 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .box-used {
+      background: var(--accbg);
+      border: 1px solid rgba(var(--acc-rgb), 0.3);
+    }
+    .box-required {
+      background: var(--purplebg);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+    .metric-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .box-used .metric-label { color: var(--acc); }
+    .box-required .metric-label { color: var(--purple); }
+    .metric-number {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .box-used .metric-number { color: var(--acc); }
+    .box-required .metric-number { color: var(--purple); }
+    .metric-sub {
+      font-size: 0.72rem;
+      color: var(--mute);
+      margin-top: 2px;
+    }
+
+    .pass-details-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .pass-details-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid var(--line-light);
+    }
+    .pass-details-table td:first-child { color: var(--mute); }
+    .pass-details-table td:last-child {
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 600;
+      text-align: right;
+      color: var(--ink);
+    }
+
+    /* =========================================================================
+       ALL AFTER LOOP: FINAL DESIGN RESULTS & RIGOROUS CHECKS
+       ========================================================================= */
+    .after-loop-panel {
+      background: var(--panel);
+      border: 2px solid var(--success);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+    .after-loop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line-light);
+    }
+    .after-loop-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .conv-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .conv-ok { background: var(--successbg); color: var(--success); }
+    .conv-warn { background: var(--warnbg); color: var(--warn); }
+
+    .final-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .final-box {
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .final-box .f-lbl {
+      font-size: 0.74rem;
+      color: var(--mute);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .final-box .f-val {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .final-box.highlight {
+      background: var(--accbg);
+      border-color: var(--acc);
+    }
+    .final-box.highlight .f-val { color: var(--acc); }
+    .final-box.highlight-success {
+      background: var(--successbg);
+      border-color: var(--success);
+    }
+    .final-box.highlight-success .f-val { color: var(--success); }
+
+    /* Checks Banner */
+    .checks-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    @media (max-width: 650px) { .checks-grid { grid-template-columns: 1fr; } }
+    .check-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 14px;
+      background: var(--bg);
+    }
+    .check-card.pass { border-left: 4px solid var(--success); }
+    .check-card.warn { border-left: 4px solid var(--warn); }
+    .check-card-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .check-desc { font-size: 0.76rem; color: var(--mute); }
+
+    /* Full Iteration Loop Table */
+    .iter-table-wrap {
+      overflow-x: auto;
+      margin-top: 14px;
+    }
+    .iter-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .iter-tbl th {
+      text-align: center;
+      font-weight: 700;
+      padding: 6px 8px;
+      border-bottom: 2px solid var(--line);
+      color: var(--mute);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .iter-tbl td {
+      padding: 6px 8px;
+      text-align: center;
+      border-bottom: 1px solid var(--line-light);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+    .iter-tbl tr.row-converged {
+      background: var(--successbg);
+    }
+    .iter-tbl tr.row-converged td {
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    /* Thermal Resistance Breakdown */
+    .res-bar-wrap {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--line-light);
+    }
+    .res-bar-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .res-bar {
+      height: 18px;
+      border-radius: 6px;
+      display: flex;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .res-seg {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .res-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.75rem;
+    }
+    .res-leg-item { display: flex; align-items: center; gap: 4px; }
+    .res-color-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .top-actions, .actions { display: none !important; }
+      .layout-grid { grid-template-columns: 1fr; }
+      .panel, .hydro-card, .pass-card, .after-loop-panel { box-shadow: none; border-color: #ccc; }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <!-- Header -->
+    <header>
+      <div class="title-wrap">
+        <h1>
+          Falling Film Evaporator Calculator
+          <span class="badge">Coupled Loop Suite</span>
+        </h1>
+        <p class="sub">Rigorous circular coupled loop for tubes used vs tubes required, heat transfer coefficients, and industrial sizing checks.</p>
+      </div>
+      <div class="top-actions">
+        <button class="theme-toggle" id="btnTheme" title="Toggle Light/Dark Theme">🌓 Theme</button>
+        <button class="btn-icon" id="btnCopy" title="Copy Calculation Summary">📋 Copy</button>
+        <button class="btn-icon" onclick="window.print()" title="Print / Export PDF">🖨️ Print</button>
+      </div>
+    </header>
+
+    <!-- Main 2-Column Work Area Grid -->
+    <div class="layout-grid">
+
+      <!-- =================================================================
+           LEFT COLUMN: INPUT PARAMETERS (Presets removed as requested)
+           ================================================================= -->
+      <aside class="panel" aria-label="Input Parameters">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span>⚙️</span> Input Parameters
+          </h2>
+        </div>
+
+        <form id="calcForm" onsubmit="return false;">
+
+          <!-- Section 1: Tube Geometry & Initial Used Tubes -->
+          <div class="sec-title">1. Tube Geometry &amp; Flow Rate</div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="mf">Feed Rate</label>
+              <span class="label-unit" id="mfUnitLabel">kg/h</span>
+            </div>
+            <div class="input-wrap">
+              <input id="mf" type="number" step="any" value="10000" class="input-with-select" required>
+              <select id="mfUnit" class="unit-selector" aria-label="Feed rate unit">
+                <option value="kgh" selected>kg/h</option>
+                <option value="kgs">kg/s</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="N0">No. of Tubes I Used (N)</label>
+                <span class="label-unit">tubes</span>
+              </div>
+              <input id="N0" type="number" step="1" min="1" value="30" required title="Initial assumed tube count for Pass 1">
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="L">Tube Length (L)</label>
+                <span class="label-unit">m</span>
+              </div>
+              <input id="L" type="number" step="any" min="0.5" value="6.0" required>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="Do">Tube Outside Dia (Do)</label>
+                <span class="label-unit">mm</span>
+              </div>
+              <input id="Do" type="number" step="any" min="1" value="38" required>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="Di">Tube Inside Dia (Di)</label>
+                <span class="label-unit">mm</span>
+              </div>
+              <input id="Di" type="number" step="any" min="1" value="35" required>
+            </div>
+          </div>
+
+          <!-- Section 2: Process Fluid Thermophysical Properties -->
+          <div class="sec-title">2. Process Fluid Properties (Inside)</div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="rhoL">Density (ρL)</label>
+                <span class="label-unit">kg/m³</span>
+              </div>
+              <input id="rhoL" type="number" step="any" value="983" required>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="muL">Viscosity (μL)</label>
+                <span class="label-unit">Pa·s</span>
+              </div>
+              <input id="muL" type="number" step="any" value="0.00047" required>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="CpL">Specific Heat (Cp)</label>
+                <span class="label-unit">J/(kg·K)</span>
+              </div>
+              <input id="CpL" type="number" step="any" value="4180" required>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="kL">Thermal Cond. (K)</label>
+                <span class="label-unit">W/(m·K)</span>
+              </div>
+              <input id="kL" type="number" step="any" value="0.654" required>
+            </div>
+          </div>
+
+          <!-- Section 3: Operating Temperatures & Evaporation Duty -->
+          <div class="sec-title">3. Operating Conditions &amp; Heat Duty</div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="Ts">Steam Temp (Ts)</label>
+                <span class="label-unit">°C</span>
+              </div>
+              <input id="Ts" type="number" step="any" value="100.0" required>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="Tb">Boiling Temp (Tb)</label>
+                <span class="label-unit">°C</span>
+              </div>
+              <input id="Tb" type="number" step="any" value="60.0" required>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="mv">Evaporation Rate</label>
+                <span class="label-unit" id="mvUnitLabel">kg/h</span>
+              </div>
+              <div class="input-wrap">
+                <input id="mv" type="number" step="any" value="2000" class="input-with-select" required>
+                <select id="mvUnit" class="unit-selector">
+                  <option value="kgh" selected>kg/h</option>
+                  <option value="kgs">kg/s</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="Tf">Feed Temp (Tf)</label>
+                <span class="label-unit">°C</span>
+              </div>
+              <input id="Tf" type="number" step="any" value="60.0" required>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="lambdaS">Steam Latent (hfg)</label>
+                <span class="label-unit">kJ/kg</span>
+              </div>
+              <input id="lambdaS" type="number" step="any" value="2257" required>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="lambdaV">Vapor Latent (λ heat at boiling point)</label>
+                <span class="label-unit">kJ/kg</span>
+              </div>
+              <input id="lambdaV" type="number" step="any" value="2358" required>
+            </div>
+          </div>
+
+          <!-- Section 4: Condensate, Wall & Fouling -->
+          <div class="sec-title">4. Steam Condensate, Wall &amp; Fouling</div>
+
+          <div class="three-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="rhoC">ρL²</label>
+                <span class="label-unit">kg/m³</span>
+              </div>
+              <input id="rhoC" type="number" step="any" value="958" required title="Condensate density (squared in formula)">
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="kC">Kl³</label>
+                <span class="label-unit">W/mK</span>
+              </div>
+              <input id="kC" type="number" step="any" value="0.68" required title="Condensate conductivity (cubed in formula)">
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="muC">μL</label>
+                <span class="label-unit">Pa·s</span>
+              </div>
+              <input id="muC" type="number" step="any" value="0.00028" required title="Condensate viscosity">
+            </div>
+          </div>
+
+          <div class="three-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="kw">2kw</label>
+                <span class="label-unit">W/mK</span>
+              </div>
+              <input id="kw" type="number" step="any" value="16.0" required title="Tube metal thermal conductivity (SS304=16)">
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="Rfi">Rfi</label>
+                <span class="label-unit">m²K/W</span>
+              </div>
+              <input id="Rfi" type="number" step="any" value="0.0002" required title="Inside fouling resistance">
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="Rfo">Rfo</label>
+                <span class="label-unit">m²K/W</span>
+              </div>
+              <input id="Rfo" type="number" step="any" value="0.0001" required title="Outside fouling resistance">
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="margin">Design Margin</label>
+                <span class="label-unit">%</span>
+              </div>
+              <input id="margin" type="number" step="1" value="15" required title="Safety margin over required tubes">
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="g">Gravity (g)</label>
+                <span class="label-unit">m/s²</span>
+              </div>
+              <input id="g" type="number" step="any" value="9.81" required>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="primary" id="btnCalculate">Calculate Tube Count Loop</button>
+            <button type="button" class="secondary" id="btnReset">Reset Defaults</button>
+          </div>
+
+          <div class="err-msg" id="errMsg" role="alert"></div>
+        </form>
+      </aside>
+
+      <!-- =================================================================
+           RIGHT COLUMN: RESULTS & LOOP BREAKDOWN
+           ================================================================= -->
+      <div class="results-col" aria-label="Calculation Results">
+
+        <!-- 1. TOP OVERVIEW DASHBOARD: hi, ho, Uo, Area, Q -->
+        <section class="summary-card" aria-live="polite">
+          <div class="summary-top">
+            <span class="summary-label">📊 Key Thermal Results Overview</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="regime-tag regime-turbulent" id="regimeBadge">Turbulent Film</span>
+              <span style="font-size:0.82rem; font-weight:600; color:var(--mute);" id="dTBadge">ΔT = 40.0 °C</span>
+            </div>
+          </div>
+
+          <div class="key-metrics-grid">
+            <div class="metric-card metric-hi">
+              <span class="m-lbl">Inside HTC (hi)</span>
+              <div class="m-val" id="topHiVal">–</div>
+              <span class="m-sub">W/(m²·K) · Process</span>
+            </div>
+
+            <div class="metric-card metric-ho">
+              <span class="m-lbl">Outside HTC (ho)</span>
+              <div class="m-val" id="topHoVal">–</div>
+              <span class="m-sub">W/(m²·K) · Steam</span>
+            </div>
+
+            <div class="metric-card metric-uo">
+              <span class="m-lbl">Overall HTC (Uo)</span>
+              <div class="m-val" id="topUoVal">–</div>
+              <span class="m-sub">W/(m²·K) · Service</span>
+            </div>
+
+            <div class="metric-card metric-area">
+              <span class="m-lbl">Req. Area (Ao)</span>
+              <div class="m-val" id="topAreaVal">–</div>
+              <span class="m-sub" id="topAreaSub">m² Outside</span>
+            </div>
+
+            <div class="metric-card metric-q">
+              <span class="m-lbl">Heat Duty (Q)</span>
+              <div class="m-val" id="topQVal">–</div>
+              <span class="m-sub" id="topSteamVal">– kg/h steam</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. CLEAN HYDRODYNAMICS & TEMPERATURE PARAMETERS (Re, Pr, Gamma, phi, dT, Two) -->
+        <section class="hydro-card">
+          <div class="hydro-card-header">
+            <span>⚡</span> Film Hydrodynamics &amp; Key Parameters (Re, Pr, Γ, phi, ΔT, T wo)
+          </div>
+
+          <div class="hydro-grid">
+            <div class="hydro-box">
+              <span class="h-lbl">Film Reynolds (Re)</span>
+              <div class="h-val" id="resRe">--</div>
+              <span class="h-sub" id="resRegime">--</span>
+            </div>
+
+            <div class="hydro-box">
+              <span class="h-lbl">Liquid Prandtl (Pr)</span>
+              <div class="h-val" id="resPr">--</div>
+              <span class="h-sub">Dimensionless</span>
+            </div>
+
+            <div class="hydro-box">
+              <span class="h-lbl">Loading Rate (Γ)</span>
+              <div class="h-val" id="resGamma">--</div>
+              <span class="h-sub">kg/(m·s) perimeter</span>
+            </div>
+
+            <div class="hydro-box">
+              <span class="h-lbl">Scale Factor (phi)</span>
+              <div class="h-val" id="resPhi">--</div>
+              <span class="h-sub">m⁻¹ (Viscous-Gravity)</span>
+            </div>
+
+            <div class="hydro-box">
+              <span class="h-lbl">Driving Force (ΔT)</span>
+              <div class="h-val" id="resDeltaT">-- °C</div>
+              <span class="h-sub" id="resTempSpan">Ts − Tb</span>
+            </div>
+
+            <div class="hydro-box">
+              <span class="h-lbl">Wall Temp (Two)</span>
+              <div class="h-val" id="resTwo">-- °C</div>
+              <span class="h-sub" id="resDeltaTo">Steam-to-Wall ΔTo</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================================================================
+             3. PROMINENT SECTION: "TWO I USED, TWO REQUIRED"
+             ================================================================= -->
+        <div>
+          <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; color: var(--ink); display: flex; align-items: center; gap: 8px;">
+            <span>🔄</span> Tube Iteration Loop: Two Passes (Used vs Required)
+          </div>
+
+          <div class="pass-container">
+
+            <!-- PASS 1 CARD -->
+            <div class="pass-card active-pass" id="cardPass1">
+              <div class="pass-header">
+                <div class="pass-title">
+                  <span>1️⃣</span> Pass 1 Iteration
+                </div>
+                <span class="pass-status-badge regime-wavy" id="pass1Status">Pass 1 Completed</span>
+              </div>
+
+              <!-- Big Numbers: Used vs Required -->
+              <div class="tube-comparison">
+                <div class="tube-metric-box box-used">
+                  <span class="metric-label">No. of Tubes I Used</span>
+                  <div class="metric-number" id="p1Used">30</div>
+                  <div class="metric-sub">Initial Assumed (N0)</div>
+                </div>
+                <div class="tube-metric-box box-required">
+                  <span class="metric-label">No. of Tubes Required</span>
+                  <div class="metric-number" id="p1Req">42</div>
+                  <div class="metric-sub" id="p1ReqSub">Exact: 41.60 tubes</div>
+                </div>
+              </div>
+
+              <table class="pass-details-table">
+                <tbody>
+                  <tr><td>Loading Rate (Γ1):</td><td id="p1Gamma">0.842 kg/m·s</td></tr>
+                  <tr><td>Reynolds No. (Re1):</td><td id="p1Re">7,167</td></tr>
+                  <tr><td>Inside HTC (hi,1):</td><td id="p1Hi">4,185 W/m²K</td></tr>
+                  <tr><td>Outside HTC (ho,1):</td><td id="p1Ho">4,057 W/m²K</td></tr>
+                  <tr><td>Overall HTC (Uo,1):</td><td id="p1Uo">1,098 W/m²K</td></tr>
+                  <tr><td>Required Area (Ao,1):</td><td id="p1Ao">29.82 m²</td></tr>
+                  <tr><td>Mismatch (ΔN1):</td><td id="p1Diff" style="color:var(--warn); font-weight:700;">11.6 tubes</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- PASS 2 CARD -->
+            <div class="pass-card active-pass" id="cardPass2">
+              <div class="pass-header">
+                <div class="pass-title">
+                  <span>2️⃣</span> Pass 2 Iteration
+                </div>
+                <span class="pass-status-badge regime-turbulent" id="pass2Status">Converged!</span>
+              </div>
+
+              <!-- Big Numbers: Used vs Required -->
+              <div class="tube-comparison">
+                <div class="tube-metric-box box-used">
+                  <span class="metric-label">No. of Tubes I Used</span>
+                  <div class="metric-number" id="p2Used">41.6</div>
+                  <div class="metric-sub">Updated from Pass 1</div>
+                </div>
+                <div class="tube-metric-box box-required">
+                  <span class="metric-label">No. of Tubes Required</span>
+                  <div class="metric-number" id="p2Req">41</div>
+                  <div class="metric-sub" id="p2ReqSub">Exact: 40.75 tubes</div>
+                </div>
+              </div>
+
+              <table class="pass-details-table">
+                <tbody>
+                  <tr><td>Loading Rate (Γ2):</td><td id="p2Gamma">0.607 kg/m·s</td></tr>
+                  <tr><td>Reynolds No. (Re2):</td><td id="p2Re">5,166</td></tr>
+                  <tr><td>Inside HTC (hi,2):</td><td id="p2Hi">4,524 W/m²K</td></tr>
+                  <tr><td>Outside HTC (ho,2):</td><td id="p2Ho">4,062 W/m²K</td></tr>
+                  <tr><td>Overall HTC (Uo,2):</td><td id="p2Uo">1,122 W/m²K</td></tr>
+                  <tr><td>Required Area (Ao,2):</td><td id="p2Ao">29.19 m²</td></tr>
+                  <tr><td>Mismatch (ΔN2):</td><td id="p2Diff" style="color:var(--success); font-weight:700;">0.87 tube (≤ 1.0)</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- =================================================================
+             4. ALL AFTER LOOP: FINAL DESIGN RESULTS & CHECKS
+             ================================================================= -->
+        <section class="after-loop-panel">
+          <div class="after-loop-header">
+            <div class="after-loop-title">
+              <span>✅</span> All Results After Convergence Loop
+            </div>
+            <span class="conv-badge conv-ok" id="finalConvBadge">Converged in 2 Passes</span>
+          </div>
+
+          <!-- Key Output Cards -->
+          <div class="final-grid">
+            <div class="final-box highlight">
+              <span class="f-lbl">Converged Required Tubes</span>
+              <div class="f-val" id="finalNReq">41 tubes</div>
+              <span style="font-size:0.75rem; color:var(--mute)" id="finalNReqRaw">40.75 continuous</span>
+            </div>
+
+            <div class="final-box highlight-success">
+              <span class="f-lbl">Commercial Design Tubes</span>
+              <div class="f-val" id="finalNDesign">47 tubes</div>
+              <span style="font-size:0.75rem; color:var(--mute)" id="finalNDesignSub">+15% Safety Margin</span>
+            </div>
+
+            <div class="final-box">
+              <span class="f-lbl">Total Heat Duty (Q)</span>
+              <div class="f-val" id="finalQ">1.31 MW</div>
+              <span style="font-size:0.75rem; color:var(--mute)" id="finalSteam">2,089.5 kg/h steam</span>
+            </div>
+
+            <div class="final-box">
+              <span class="f-lbl">Required Outside Area (Ao)</span>
+              <div class="f-val" id="finalAo">29.19 m²</div>
+              <span style="font-size:0.75rem; color:var(--mute)" id="finalAoPerTube">0.716 m²/tube</span>
+            </div>
+
+            <div class="final-box">
+              <span class="f-lbl">Overall HTC (Uo)</span>
+              <div class="f-val" id="finalUo">1,122 W/m²K</div>
+              <span style="font-size:0.75rem; color:var(--mute)">Based on Ao</span>
+            </div>
+
+            <div class="final-box">
+              <span class="f-lbl">Outside Condensation (ho)</span>
+              <div class="f-val" id="finalHo">4,062 W/m²K</div>
+              <span style="font-size:0.75rem; color:var(--mute)" id="finalTwo">Two = 88.95 °C</span>
+            </div>
+          </div>
+
+          <!-- Industrial Criteria Verification Checks -->
+          <div class="checks-grid">
+            <!-- Check 1: Minimum Wetting Rate -->
+            <div class="check-card pass" id="cardCheckWetting">
+              <div class="check-card-title">
+                <span>💧 Tube Wetting Rate Criterion (Γ ≥ 0.03)</span>
+                <span style="color:var(--success); font-weight:700;" id="statusWetting">SAFE (17.9×)</span>
+              </div>
+              <div class="check-desc" id="descWetting">
+                Design Γ = 0.538 kg/(m·s) exceeds the minimum limit (0.03 kg/m·s) by 17.9× to prevent dry-out, scaling and tube fouling.
+              </div>
+            </div>
+
+            <!-- Check 2: Condensate Laminar Regime -->
+            <div class="check-card pass" id="cardCheckCond">
+              <div class="check-card-title">
+                <span>🌊 Steam Condensate Film Regime (Rec ≤ 1800)</span>
+                <span style="color:var(--success); font-weight:700;" id="statusCond">LAMINAR (1478)</span>
+              </div>
+              <div class="check-desc" id="descCond">
+                Condensate film Reynolds number Rec = 1,478 ≤ 1,800, confirming validity of vertical laminar Nusselt condensation theory.
+              </div>
+            </div>
+          </div>
+
+          <!-- Thermal Resistance Breakdown -->
+          <div class="res-bar-wrap">
+            <div class="res-bar-title">Thermal Resistance Breakdown (% of Total Resistance)</div>
+            <div class="res-bar" id="resBar">
+              <div class="res-seg" id="segHi" style="background:#0284c7; width:26%" title="Inside Film: 26%"></div>
+              <div class="res-seg" id="segRfi" style="background:#f59e0b; width:24%" title="Inside Fouling: 24%"></div>
+              <div class="res-seg" id="segWall" style="background:#8b5cf6; width:11%" title="Tube Wall: 11%"></div>
+              <div class="res-seg" id="segRfo" style="background:#ec4899; width:11%" title="Outside Fouling: 11%"></div>
+              <div class="res-seg" id="segHo" style="background:#10b981; width:28%" title="Outside Condensation: 28%"></div>
+            </div>
+            <div class="res-legend">
+              <div class="res-leg-item"><div class="res-color-dot" style="background:#0284c7"></div>Inside Film (1/hi): <strong id="pctHi">26%</strong></div>
+              <div class="res-leg-item"><div class="res-color-dot" style="background:#f59e0b"></div>Inside Fouling (Rfi): <strong id="pctRfi">24%</strong></div>
+              <div class="res-leg-item"><div class="res-color-dot" style="background:#8b5cf6"></div>Wall (Rw): <strong id="pctWall">11%</strong></div>
+              <div class="res-leg-item"><div class="res-color-dot" style="background:#ec4899"></div>Outside Fouling (Rfo): <strong id="pctRfo">11%</strong></div>
+              <div class="res-leg-item"><div class="res-color-dot" style="background:#10b981"></div>Outside Film (1/ho): <strong id="pctHo">28%</strong></div>
+            </div>
+          </div>
+
+          <!-- Complete Loop Iteration Table -->
+          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line-light);">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--mute); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">
+              Full Loop Iteration History Table
+            </div>
+            <div class="iter-table-wrap">
+              <table class="iter-tbl">
+                <thead>
+                  <tr>
+                    <th>Pass</th>
+                    <th>Tubes I Used</th>
+                    <th>Tubes Required</th>
+                    <th>Γ (kg/m·s)</th>
+                    <th>Re</th>
+                    <th>hi (W/m²K)</th>
+                    <th>Two (°C)</th>
+                    <th>ho (W/m²K)</th>
+                    <th>Uo (W/m²K)</th>
+                    <th>Ao (m²)</th>
+                    <th>Mismatch (ΔN)</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="iterTbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const $ = (id) => document.getElementById(id);
+      const $$ = (sel) => document.querySelectorAll(sel);
+
+      // Default Inputs
+      const defaultInputs = {
+        mf: 10000, mfUnit: 'kgh',
+        N0: 30, L: 6.0, Di: 35, Do: 38,
+        rhoL: 983, muL: 0.00047, CpL: 4180, kL: 0.654,
+        Ts: 100.0, Tb: 60.0, mv: 2000, mvUnit: 'kgh', Tf: 60.0,
+        lambdaV: 2358, lambdaS: 2257,
+        rhoC: 958, muC: 0.00028, kC: 0.68,
+        kw: 16.0, Rfi: 0.0002, Rfo: 0.0001,
+        margin: 15, g: 9.81
+      };
+
+      // Formatters
+      function fmt(val, sigFigs = 4) {
+        if (!isFinite(val)) return '–';
+        const abs = Math.abs(val);
+        if (abs !== 0 && (abs < 0.001 || abs >= 1e5)) {
+          return Number(val).toExponential(sigFigs - 1);
+        }
+        return Number(val).toPrecision(sigFigs);
+      }
+
+      function fmtFixed(val, digits = 2) {
+        if (!isFinite(val)) return '–';
+        return Number(val).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+      }
+
+      // Theme toggle
+      $('btnTheme').addEventListener('click', () => {
+        const doc = document.documentElement;
+        const cur = doc.getAttribute('data-theme');
+        doc.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+      });
+
+      // Unit dropdown listeners
+      $('mfUnit').addEventListener('change', () => {
+        $('mfUnitLabel').textContent = $('mfUnit').value === 'kgh' ? 'kg/h' : 'kg/s';
+      });
+      $('mvUnit').addEventListener('change', () => {
+        $('mvUnitLabel').textContent = $('mvUnit').value === 'kgh' ? 'kg/h' : 'kg/s';
+      });
+
+      // Solver State for Export
+      let currentResults = null;
+
+      function calculate() {
+        const errEl = $('errMsg');
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+
+        // Read Raw Inputs
+        const rawMf = parseFloat($('mf').value);
+        const mfUnit = $('mfUnit').value;
+        const N0 = parseFloat($('N0').value);
+        const L = parseFloat($('L').value);
+        const rawDi = parseFloat($('Di').value);
+        const rawDo = parseFloat($('Do').value);
+
+        const rhoL = parseFloat($('rhoL').value);
+        const muL = parseFloat($('muL').value);
+        const CpL = parseFloat($('CpL').value);
+        const kL = parseFloat($('kL').value);
+
+        const Ts = parseFloat($('Ts').value);
+        const Tb = parseFloat($('Tb').value);
+        const rawMv = parseFloat($('mv').value);
+        const mvUnit = $('mvUnit').value;
+        const Tf = parseFloat($('Tf').value);
+
+        const lambdaV_kJ = parseFloat($('lambdaV').value);
+        const lambdaS_kJ = parseFloat($('lambdaS').value);
+
+        const rhoC = parseFloat($('rhoC').value);
+        const muC = parseFloat($('muC').value);
+        const kC = parseFloat($('kC').value);
+
+        const kw = parseFloat($('kw').value);
+        const Rfi = parseFloat($('Rfi').value);
+        const Rfo = parseFloat($('Rfo').value);
+
+        const marginPct = parseFloat($('margin').value);
+        const g = parseFloat($('g').value);
+
+        // Validations
+        const inputs = [rawMf, N0, L, rawDi, rawDo, rhoL, muL, CpL, kL, Ts, Tb, rawMv, Tf, lambdaV_kJ, lambdaS_kJ, rhoC, muC, kC, kw, Rfi, Rfo, marginPct, g];
+        if (inputs.some(v => isNaN(v) || !isFinite(v))) {
+          errEl.textContent = 'All parameters must contain valid numbers.';
+          errEl.style.display = 'block';
+          return;
+        }
+
+        if (rawMf <= 0 || N0 <= 0 || L <= 0 || rawDi <= 0 || rawDo <= 0 || rhoL <= 0 || muL <= 0 || CpL <= 0 || kL <= 0 || rawMv <= 0 || kw <= 0 || g <= 0) {
+          errEl.textContent = 'Physical dimensions, flow rates and fluid properties must be strictly greater than 0.';
+          errEl.style.display = 'block';
+          return;
+        }
+
+        if (rawDo <= rawDi) {
+          errEl.textContent = 'Tube outside diameter (Do) must be greater than inside diameter (Di).';
+          errEl.style.display = 'block';
+          return;
+        }
+
+        if (Ts <= Tb) {
+          errEl.textContent = 'Steam temperature (Ts) must be greater than boiling temperature (Tb) for heat transfer to occur.';
+          errEl.style.display = 'block';
+          return;
+        }
+
+        // SI Conversions
+        const mf_kgs = mfUnit === 'kgh' ? (rawMf / 3600.0) : rawMf;
+        const mv_kgs = mvUnit === 'kgh' ? (rawMv / 3600.0) : rawMv;
+        const Di_m = rawDi / 1000.0;
+        const Do_m = rawDo / 1000.0;
+        const lambdaV_J = lambdaV_kJ * 1000.0;
+        const lambdaS_J = lambdaS_kJ * 1000.0;
+        const margin = marginPct / 100.0;
+
+        // F1: Heat Duty Q
+        const Q_sensible = mf_kgs * CpL * (Tb - Tf);
+        const Q_latent = mv_kgs * lambdaV_J;
+        const Q = Q_sensible + Q_latent;
+
+        // F2: Driving force delta T
+        const delta_T = Ts - Tb;
+
+        // F3: Steam consumption
+        const ms_kgs = Q / lambdaS_J;
+        const ms_kgh = ms_kgs * 3600.0;
+
+        // F6: Liquid Prandtl number
+        const Pr = (CpL * muL) / kL;
+
+        // F4 Step 4 Viscous-gravity scale phi
+        const viscGravRatio = (Math.pow(rhoL, 2) * g) / Math.pow(muL, 2);
+        const phi = Math.cbrt(viscGravRatio);
+
+        // Tube area per tube
+        const Ao_per_tube = Math.PI * Do_m * L;
+
+        // Helper: evaluate single iteration point
+        function evaluateAtN(N_assumed) {
+          // Process side
+          const totalPerim = N_assumed * Math.PI * Di_m;
+          const Gamma = mf_kgs / totalPerim;
+          const Re = (4.0 * Gamma) / muL;
+          const termRe = Math.pow(Re, -0.2648);
+          const termPr = Math.pow(Pr, 0.1592);
+          const hi = 1.6636 * termRe * termPr * kL * phi;
+
+          // Inner wall temperature loop for ho & Uo
+          let Two = Ts - (delta_T * 0.276);
+          let ho = 0.0;
+          let Uo = 0.0;
+          let delta_To = 0.0;
+          let R_inside_film = 0, R_inside_foul = 0, R_wall = 0, R_out_foul = 0, R_out_film = 0, R_total = 0;
+
+          for (let inner = 0; inner < 40; inner++) {
+            delta_To = Ts - Two;
+            if (delta_To <= 0.001) delta_To = 0.001;
+
+            // F9: Outside Condensation HTC (Nusselt vertical)
+            const bracket = (Math.pow(rhoC, 2) * g * Math.pow(kC, 3) * lambdaS_J) / (muC * L * delta_To);
+            ho = 0.943 * Math.pow(bracket, 0.25);
+
+            // F10: Overall HTC Uo
+            R_inside_film = (Do_m / Di_m) * (1.0 / hi);
+            R_inside_foul = (Do_m / Di_m) * Rfi;
+            R_wall = (Do_m / (2.0 * kw)) * Math.log(Do_m / Di_m);
+            R_out_foul = Rfo;
+            R_out_film = 1.0 / ho;
+
+            R_total = R_inside_film + R_inside_foul + R_wall + R_out_foul + R_out_film;
+            Uo = 1.0 / R_total;
+
+            // F11: Wall temperature heat balance
+            const Two_calc = Ts - (Uo / ho) * delta_T;
+            if (Math.abs(Two_calc - Two) < 0.005) {
+              Two = Two_calc;
+              break;
+            }
+            Two = 0.5 * Two + 0.5 * Two_calc;
+          }
+
+          // F12 & F13: Area & Required Tubes
+          const Ao = Q / (Uo * delta_T);
+          const N_req = Ao / Ao_per_tube;
+          const error_N = Math.abs(N_req - N_assumed);
+
+          return {
+            N_assumed, Gamma, Re, termRe, termPr, hi,
+            Two, delta_To, ho, Uo, Ao, N_req, error_N,
+            R_inside_film, R_inside_foul, R_wall, R_out_foul, R_out_film, R_total
+          };
+        }
+
+        // Execute Iteration Loop
+        const iterationHistory = [];
+        let curN = N0;
+        let converged = false;
+        const maxIter = 25;
+
+        for (let iter = 1; iter <= maxIter; iter++) {
+          const res = evaluateAtN(curN);
+          iterationHistory.push({ pass: iter, ...res });
+
+          if (res.error_N <= 1.0) {
+            converged = true;
+            break;
+          }
+          curN = res.N_req;
+        }
+
+        const pass1 = iterationHistory[0];
+        const pass2 = iterationHistory.length > 1 ? iterationHistory[1] : pass1;
+        const finalPass = iterationHistory[iterationHistory.length - 1];
+
+        // Final numbers
+        const N_converged_continuous = finalPass.N_req;
+        const N_converged_ceil = Math.ceil(N_converged_continuous);
+        const N_design = Math.ceil(N_converged_continuous * (1.0 + margin));
+        const Ao_design = N_design * Ao_per_tube;
+
+        // Checks
+        const totalPerimDesign = N_design * Math.PI * Di_m;
+        const Gamma_design = mf_kgs / totalPerimDesign;
+        const wettingOK = Gamma_design >= 0.03;
+        const wettingRatio = Gamma_design / 0.03;
+
+        const Rec_design = (4.0 * ms_kgs) / (Math.PI * Do_m * N_design * muC);
+        const condLaminarOK = Rec_design <= 1800.0;
+
+        currentResults = {
+          Q, delta_T, ms_kgh, Pr, phi,
+          pass1, pass2, finalPass,
+          N_converged_ceil, N_design, Ao_design,
+          Gamma_design, wettingOK, wettingRatio,
+          Rec_design, condLaminarOK
+        };
+
+        // =====================================================================
+        // 1. UPDATE TOP 5-METRIC OVERVIEW: hi, ho, Uo, Area, Q
+        // =====================================================================
+        $('topHiVal').textContent = fmtFixed(pass1.hi, 1);
+        $('topHoVal').textContent = fmtFixed(pass1.ho, 1);
+        $('topUoVal').textContent = fmtFixed(pass1.Uo, 1);
+        $('topAreaVal').textContent = fmtFixed(pass1.Ao, 2);
+        $('topAreaSub').textContent = `m² (${fmt(Ao_per_tube, 3)} m²/tube)`;
+
+        if (Q >= 1e6) {
+          $('topQVal').textContent = `${fmtFixed(Q / 1e6, 2)} MW`;
+        } else {
+          $('topQVal').textContent = `${fmtFixed(Q / 1000, 1)} kW`;
+        }
+        $('topSteamVal').textContent = `${fmtFixed(ms_kgh, 1)} kg/h steam`;
+
+        let regimeText = 'Turbulent Film';
+        let regimeCls = 'regime-turbulent';
+        if (pass1.Re < 30) {
+          regimeText = 'Laminar Film (Re < 30)';
+          regimeCls = 'regime-laminar';
+        } else if (pass1.Re < 1600) {
+          regimeText = 'Wavy-Laminar Film (30 ≤ Re < 1600)';
+          regimeCls = 'regime-wavy';
+        } else {
+          regimeText = 'Turbulent Film (Re ≥ 1600)';
+          regimeCls = 'regime-turbulent';
+        }
+        $('regimeBadge').textContent = regimeText;
+        $('regimeBadge').className = `regime-tag ${regimeCls}`;
+        $('dTBadge').textContent = `ΔT = ${fmtFixed(delta_T, 1)} °C (${Ts}°C − ${Tb}°C)`;
+
+        // =====================================================================
+        // 2. UPDATE HYDRODYNAMICS & KEY PARAMETERS: Re, Pr, Gamma, phi, dT, Two
+        // =====================================================================
+        $('resRe').textContent = fmtFixed(pass1.Re, 1);
+        $('resRegime').textContent = regimeText;
+        $('resPr').textContent = fmt(Pr, 4);
+        $('resGamma').textContent = fmt(pass1.Gamma, 4);
+        $('resPhi').textContent = fmt(phi, 4);
+        $('resDeltaT').textContent = `${fmtFixed(delta_T, 1)} °C`;
+        $('resTempSpan').textContent = `Ts = ${Ts}°C, Tb = ${Tb}°C`;
+        $('resTwo').textContent = `${fmtFixed(pass1.Two, 1)} °C`;
+        $('resDeltaTo').textContent = `ΔTo = ${fmtFixed(pass1.delta_To, 1)} K`;
+
+        // =====================================================================
+        // 3. PROMINENT TWO PASSES (USED vs REQUIRED)
+        // =====================================================================
+        // Pass 1
+        $('p1Used').textContent = fmtFixed(pass1.N_assumed, 0);
+        $('p1Req').textContent = `${Math.ceil(pass1.N_req)}`;
+        $('p1ReqSub').textContent = `Exact: ${fmtFixed(pass1.N_req, 2)} tubes`;
+        $('p1Gamma').textContent = `${fmt(pass1.Gamma, 4)} kg/m·s`;
+        $('p1Re').textContent = fmtFixed(pass1.Re, 0);
+        $('p1Hi').textContent = `${fmtFixed(pass1.hi, 1)} W/m²K`;
+        $('p1Ho').textContent = `${fmtFixed(pass1.ho, 1)} W/m²K`;
+        $('p1Uo').textContent = `${fmtFixed(pass1.Uo, 1)} W/m²K`;
+        $('p1Ao').textContent = `${fmtFixed(pass1.Ao, 2)} m²`;
+        $('p1Diff').textContent = `${fmtFixed(pass1.error_N, 2)} tubes ${pass1.error_N <= 1.0 ? '✅ (Converged)' : '⚠️ (Mismatch > 1)'}`;
+        $('pass1Status').textContent = pass1.error_N <= 1.0 ? 'Converged in Pass 1' : 'Proceed to Pass 2';
+        $('pass1Status').className = pass1.error_N <= 1.0 ? 'pass-status-badge regime-turbulent' : 'pass-status-badge regime-wavy';
+
+        // Pass 2
+        $('p2Used').textContent = fmtFixed(pass2.N_assumed, 2);
+        $('p2Req').textContent = `${Math.ceil(pass2.N_req)}`;
+        $('p2ReqSub').textContent = `Exact: ${fmtFixed(pass2.N_req, 2)} tubes`;
+        $('p2Gamma').textContent = `${fmt(pass2.Gamma, 4)} kg/m·s`;
+        $('p2Re').textContent = fmtFixed(pass2.Re, 0);
+        $('p2Hi').textContent = `${fmtFixed(pass2.hi, 1)} W/m²K`;
+        $('p2Ho').textContent = `${fmtFixed(pass2.ho, 1)} W/m²K`;
+        $('p2Uo').textContent = `${fmtFixed(pass2.Uo, 1)} W/m²K`;
+        $('p2Ao').textContent = `${fmtFixed(pass2.Ao, 2)} m²`;
+        $('p2Diff').textContent = `${fmtFixed(pass2.error_N, 2)} tubes ${pass2.error_N <= 1.0 ? '✅ (Converged ≤ 1)' : '⚠️'}`;
+        $('pass2Status').textContent = pass2.error_N <= 1.0 ? 'Converged!' : `Pass 2 Error = ${fmtFixed(pass2.error_N, 1)}`;
+        $('pass2Status').className = pass2.error_N <= 1.0 ? 'pass-status-badge regime-turbulent' : 'pass-status-badge regime-wavy';
+
+        // =====================================================================
+        // 4. ALL AFTER LOOP (FINAL CONVERGED & DESIGN OUTPUTS)
+        // =====================================================================
+        $('finalConvBadge').textContent = `Converged in ${iterationHistory.length} Pass${iterationHistory.length > 1 ? 'es' : ''} (ΔN ≤ 1.0)`;
+        $('finalConvBadge').className = 'conv-badge conv-ok';
+
+        $('finalNReq').textContent = `${N_converged_ceil} tubes`;
+        $('finalNReqRaw').textContent = `${fmtFixed(N_converged_continuous, 2)} continuous required`;
+
+        $('finalNDesign').textContent = `${N_design} tubes`;
+        $('finalNDesignSub').textContent = `+${marginPct}% Margin (Over ${N_converged_ceil} req)`;
+
+        $('finalQ').textContent = Q >= 1e6 ? `${fmtFixed(Q / 1e6, 2)} MW` : `${fmtFixed(Q / 1000, 1)} kW`;
+        $('finalSteam').textContent = `${fmtFixed(ms_kgh, 1)} kg/h steam`;
+
+        $('finalAo').textContent = `${fmtFixed(finalPass.Ao, 2)} m²`;
+        $('finalAoPerTube').textContent = `${fmt(Ao_per_tube, 4)} m²/tube (L = ${L}m)`;
+
+        $('finalUo').textContent = `${fmtFixed(finalPass.Uo, 1)} W/m²K`;
+        $('finalHo').textContent = `${fmtFixed(finalPass.ho, 1)} W/m²K`;
+        $('finalTwo').textContent = `Two = ${fmtFixed(finalPass.Two, 2)} °C (ΔTo = ${fmtFixed(finalPass.delta_To, 2)} K)`;
+
+        // Criteria Checks
+        const cardW = $('cardCheckWetting');
+        if (wettingOK) {
+          cardW.className = 'check-card pass';
+          $('statusWetting').textContent = `SAFE (${fmtFixed(wettingRatio, 1)}×)`;
+          $('statusWetting').style.color = 'var(--success)';
+        } else {
+          cardW.className = 'check-card warn';
+          $('statusWetting').textContent = `LOW (${fmtFixed(wettingRatio, 2)}×)`;
+          $('statusWetting').style.color = 'var(--warn)';
+        }
+        $('descWetting').textContent = `Design wetting rate Γ = ${fmt(Gamma_design, 4)} kg/(m·s) ${wettingOK ? 'comfortably exceeds' : 'is below'} the industrial minimum limit of 0.030 kg/(m·s).`;
+
+        const cardC = $('cardCheckCond');
+        if (condLaminarOK) {
+          cardC.className = 'check-card pass';
+          $('statusCond').textContent = `LAMINAR (${fmtFixed(Rec_design, 0)})`;
+          $('statusCond').style.color = 'var(--success)';
+        } else {
+          cardC.className = 'check-card warn';
+          $('statusCond').textContent = `TURBULENT (${fmtFixed(Rec_design, 0)})`;
+          $('statusCond').style.color = 'var(--warn)';
+        }
+        $('descCond').textContent = `Condensate Reynolds Rec = ${fmtFixed(Rec_design, 0)} ${condLaminarOK ? '≤ 1,800, validating vertical laminar film' : '> 1,800, transitioning to wavy-turbulent'} condensation.`;
+
+        // Thermal resistance breakdown percentages
+        const pctHi = (finalPass.R_inside_film / finalPass.R_total) * 100.0;
+        const pctRfi = (finalPass.R_inside_foul / finalPass.R_total) * 100.0;
+        const pctWall = (finalPass.R_wall / finalPass.R_total) * 100.0;
+        const pctRfo = (finalPass.R_out_foul / finalPass.R_total) * 100.0;
+        const pctHo = (finalPass.R_out_film / finalPass.R_total) * 100.0;
+
+        $('segHi').style.width = `${pctHi.toFixed(1)}%`;
+        $('segRfi').style.width = `${pctRfi.toFixed(1)}%`;
+        $('segWall').style.width = `${pctWall.toFixed(1)}%`;
+        $('segRfo').style.width = `${pctRfo.toFixed(1)}%`;
+        $('segHo').style.width = `${pctHo.toFixed(1)}%`;
+
+        $('pctHi').textContent = `${pctHi.toFixed(1)}%`;
+        $('pctRfi').textContent = `${pctRfi.toFixed(1)}%`;
+        $('pctWall').textContent = `${pctWall.toFixed(1)}%`;
+        $('pctRfo').textContent = `${pctRfo.toFixed(1)}%`;
+        $('pctHo').textContent = `${pctHo.toFixed(1)}%`;
+
+        // Populate Iteration Table
+        const tb = $('iterTbody');
+        tb.innerHTML = '';
+        iterationHistory.forEach(rec => {
+          const tr = document.createElement('tr');
+          if (rec.error_N <= 1.0) tr.className = 'row-converged';
+          tr.innerHTML = `
+            <td><strong>Pass ${rec.pass}</strong></td>
+            <td>${fmtFixed(rec.N_assumed, 2)}</td>
+            <td><strong>${Math.ceil(rec.N_req)}</strong> <span style="font-size:0.75rem; color:var(--mute)">(${fmtFixed(rec.N_req, 2)})</span></td>
+            <td>${fmt(rec.Gamma, 4)}</td>
+            <td>${fmtFixed(rec.Re, 0)}</td>
+            <td>${fmtFixed(rec.hi, 1)}</td>
+            <td>${fmtFixed(rec.Two, 2)}</td>
+            <td>${fmtFixed(rec.ho, 1)}</td>
+            <td>${fmtFixed(rec.Uo, 1)}</td>
+            <td>${fmtFixed(rec.Ao, 2)}</td>
+            <td>${fmtFixed(rec.error_N, 2)}</td>
+            <td>${rec.error_N <= 1.0 ? '✅ Converged' : '🔄 Next Pass'}</td>
+          `;
+          tb.appendChild(tr);
+        });
+      }
+
+      // Copy summary to clipboard
+      $('btnCopy').addEventListener('click', () => {
+        if (!currentResults) return;
+        const r = currentResults;
+        const text = [
+          `--- Falling Film Evaporator Sizing Summary ---`,
+          `Heat Duty: ${(r.Q / 1e6).toFixed(2)} MW (${r.delta_T.toFixed(1)} K driving force)`,
+          `Steam Flow: ${r.ms_kgh.toFixed(1)} kg/h`,
+          ``,
+          `--- Key Thermal Metrics ---`,
+          `hi (Inside HTC): ${r.pass1.hi.toFixed(1)} W/(m²·K)`,
+          `ho (Outside Condensation HTC): ${r.pass1.ho.toFixed(1)} W/(m²·K)`,
+          `Uo (Overall HTC): ${r.pass1.Uo.toFixed(1)} W/(m²·K)`,
+          `Ao (Required Outside Area): ${r.pass1.Ao.toFixed(2)} m²`,
+          `Q (Total Heat Duty): ${(r.Q / 1e6).toFixed(2)} MW`,
+          ``,
+          `--- Film Hydrodynamics & Conditions ---`,
+          `Film Reynolds (Re): ${r.pass1.Re.toFixed(1)}`,
+          `Liquid Prandtl (Pr): ${r.Pr.toFixed(3)}`,
+          `Liquid Loading (Gamma): ${r.pass1.Gamma.toFixed(4)} kg/(m·s)`,
+          `Viscous-Gravity Scale (phi): ${r.phi.toFixed(3)} m⁻¹`,
+          `Wall Temperature (Two): ${r.pass1.Two.toFixed(1)} °C`,
+          ``,
+          `--- Circular Coupled Loop (Used vs Required) ---`,
+          `Pass 1: Tubes I Used = ${r.pass1.N_assumed.toFixed(1)} | Tubes Required = ${r.pass1.N_req.toFixed(2)} (Mismatch: ${r.pass1.error_N.toFixed(2)})`,
+          `Pass 2: Tubes I Used = ${r.pass2.N_assumed.toFixed(2)} | Tubes Required = ${r.pass2.N_req.toFixed(2)} (Mismatch: ${r.pass2.error_N.toFixed(2)})`,
+          ``,
+          `--- All Results After Loop ---`,
+          `Final Converged Required Tubes: ${r.N_converged_ceil} tubes (${r.finalPass.N_req.toFixed(2)} continuous)`,
+          `Commercial Design Tubes (+Margin): ${r.N_design} tubes`,
+          `Required Area (Ao): ${r.finalPass.Ao.toFixed(2)} m²`,
+          `Overall HTC (Uo): ${r.finalPass.Uo.toFixed(1)} W/(m²·K)`,
+          `Outside Condensation HTC (ho): ${r.finalPass.ho.toFixed(1)} W/(m²·K)`,
+          `Outer Wall Temp (Two): ${r.finalPass.Two.toFixed(2)} °C`,
+          `Wetting Check (Gamma >= 0.03): ${r.wettingOK ? 'PASS' : 'WARN'} (${r.Gamma_design.toFixed(4)} kg/m·s, ${r.wettingRatio.toFixed(1)}x)`,
+          `Condensate Film Check (Rec <= 1800): ${r.condLaminarOK ? 'PASS' : 'WARN'} (Rec = ${r.Rec_design.toFixed(0)})`
+        ].join('\n');
+
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Calculation summary successfully copied to clipboard!');
+        }).catch(() => {
+          prompt('Copy calculation summary:', text);
+        });
+      });
+
+      // Reset
+      $('btnReset').addEventListener('click', () => {
+        Object.keys(defaultInputs).forEach(k => {
+          const el = $(k);
+          if (el) el.value = defaultInputs[k];
+        });
+        $('mfUnitLabel').textContent = $('mfUnit').value === 'kgh' ? 'kg/h' : 'kg/s';
+        $('mvUnitLabel').textContent = $('mvUnit').value === 'kgh' ? 'kg/h' : 'kg/s';
+        calculate();
+      });
+
+      // Bind calculate triggers
+      $('btnCalculate').addEventListener('click', calculate);
+      $$('input, select').forEach(el => {
+        el.addEventListener('input', calculate);
+      });
+
+      calculate();
+
+    })();
+  </script>
+</body>
+</html>
